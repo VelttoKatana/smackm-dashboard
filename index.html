@@ -151,6 +151,40 @@ textarea:focus{border-color:var(--orange)}
 .sbtn:hover{background:var(--orange);color:#000}
 .nsaved{font-size:8px;color:var(--green);margin-left:10px;opacity:0;transition:opacity .3s}
 
+/* ── PRICE CHANGE ── */
+.pchg{font-size:9px;margin-top:3px;font-weight:700;letter-spacing:1px}
+.pchg.up{color:var(--green)}.pchg.dn{color:var(--red)}.pchg.flat{color:var(--muted)}
+.hp-chg{font-size:8px;font-weight:700;letter-spacing:1px;margin-left:5px}
+.hp-chg.up{color:var(--green)}.hp-chg.dn{color:var(--red)}.hp-chg.flat{color:var(--muted)}
+
+/* ── NFT PAGE ── */
+.nft-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:3px;padding:16px}
+.nft-stat{background:var(--s2);border:1px solid var(--border);padding:14px}
+.nft-stat-lbl{font-size:7px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px}
+.nft-stat-val{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--yellow)}
+.nft-stat-sub{font-size:7px;color:var(--muted);margin-top:2px}
+.mult-badge{display:inline-block;padding:2px 7px;font-size:8px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;border:1px solid var(--orange);color:var(--orange)}
+
+/* ── CHECKER ── */
+.checker-wrap{padding:20px 18px}
+.checker-input-row{display:flex;gap:8px;margin-bottom:20px}
+.checker-input{flex:1;background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:10px;padding:10px 14px;outline:none;transition:border-color .2s}
+.checker-input:focus{border-color:var(--orange)}
+.checker-btn{padding:10px 20px;background:none;border:1px solid var(--orange);color:var(--orange);font-family:var(--font);font-size:9px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s;white-space:nowrap}
+.checker-btn:hover{background:var(--orange);color:#000}
+.result-card{background:var(--s2);border:1px solid var(--border);padding:20px;max-width:520px}
+.result-card.whale{border-color:var(--red)}.result-card.active{border-color:var(--green)}.result-card.new{border-color:var(--yellow)}
+.rc-head{font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--muted);letter-spacing:2px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.rc-row{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid #1A1A1A}
+.rc-row:last-child{border-bottom:none}
+.rc-lbl{font-size:8px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.rc-val{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--text)}
+.rc-status{margin-top:14px;padding:10px 14px;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px}
+.rc-status.active{background:rgba(0,255,136,.08);color:var(--green);border:1px solid var(--green)}
+.rc-status.holder{background:rgba(56,182,255,.08);color:var(--blue);border:1px solid var(--blue)}
+.rc-status.neww{background:rgba(255,215,0,.08);color:var(--yellow);border:1px solid var(--yellow)}
+.rc-status.whale{background:rgba(255,51,85,.08);color:var(--red);border:1px solid var(--red)}
+
 /* ── MISC ── */
 .empty{padding:24px 18px;text-align:center;color:var(--muted);font-size:8px;letter-spacing:2px}
 #rModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:200;align-items:center;justify-content:center;padding:20px}
@@ -174,7 +208,10 @@ textarea:focus{border-color:var(--orange)}
 <div class="topbar">
   <div class="logo">🦟 SMACKM</div>
   <div class="logo-price">
-    <div class="hp-val" id="hp-price">···</div>
+    <div style="display:flex;align-items:baseline;gap:6px">
+      <div class="hp-val" id="hp-price">···</div>
+      <span class="hp-chg flat" id="hp-chg">···</span>
+    </div>
     <div class="hp-sub" id="hp-sub">LIVE PRICE</div>
   </div>
   <div class="nav-pill">
@@ -184,6 +221,8 @@ textarea:focus{border-color:var(--orange)}
     <button class="nav-btn" data-page="whales" onclick="sp('whales')">🐋 WHALES</button>
     <button class="nav-btn" data-page="pool" onclick="sp('pool')">💧 POOL</button>
     <button class="nav-btn" data-page="vesting" onclick="sp('vesting')">🔒 VESTING</button>
+    <button class="nav-btn" data-page="nfts" onclick="sp('nfts')">🎯 NFTs</button>
+    <button class="nav-btn" data-page="check" onclick="sp('check')">🔍 CHECK</button>
   </div>
   <div class="topbar-right">
     <div class="live-badge"><div class="live-dot" id="ld"></div><span id="ls">···</span></div>
@@ -230,6 +269,7 @@ textarea:focus{border-color:var(--orange)}
     <div class="kpi" style="--kc:var(--yellow)">
       <div class="klbl">Price USD</div>
       <div class="kval loading sm" id="k-p">···</div>
+      <div class="pchg flat" id="k-p-chg">— 24h</div>
       <div class="ksub" id="k-mc">Market cap ···</div>
     </div>
   </div>
@@ -383,6 +423,62 @@ textarea:focus{border-color:var(--orange)}
       <thead><tr><th>Time</th><th>Wallet</th><th>Type</th><th style="text-align:right">Amount</th><th>Memo</th></tr></thead>
       <tbody id="vtBody"><tr><td colspan="5" class="empty">···</td></tr></tbody>
     </table>
+  </div>
+</div>
+
+<!-- ═══════════════════ NFTs ═══════════════════ -->
+<div class="page" id="page-nfts">
+  <div class="sec" style="margin-bottom:3px">
+    <div class="sh"><div class="st">🎯 NFT Collection Stats</div><button class="mb" onclick="loadNFTs()">↻</button></div>
+    <div class="nft-stats" id="nft-stats">
+      <div class="nft-stat"><div class="nft-stat-lbl">Multiplier NFTs Minted</div><div class="nft-stat-val loading" id="nft-mult-total">···</div><div class="nft-stat-sub">Token 0.0.8259328</div></div>
+      <div class="nft-stat"><div class="nft-stat-lbl">Multiplier Holders</div><div class="nft-stat-val loading" id="nft-mult-holders">···</div><div class="nft-stat-sub">unique wallets</div></div>
+      <div class="nft-stat"><div class="nft-stat-lbl">Elite NFTs Minted</div><div class="nft-stat-val loading" id="nft-elite-total">···</div><div class="nft-stat-sub">Token 0.0.9153866</div></div>
+      <div class="nft-stat"><div class="nft-stat-lbl">Elite Holders</div><div class="nft-stat-val loading" id="nft-elite-holders">···</div><div class="nft-stat-sub">unique wallets</div></div>
+    </div>
+  </div>
+  <div class="two">
+    <div class="sec">
+      <div class="sh"><div class="st">🎯 Top Multiplier Holders</div></div>
+      <table>
+        <thead><tr><th>#</th><th>Wallet</th><th style="text-align:center">NFTs</th><th style="text-align:center">Bonus</th></tr></thead>
+        <tbody id="nft-mult-body"><tr><td colspan="4" class="empty">···</td></tr></tbody>
+      </table>
+    </div>
+    <div class="sec">
+      <div class="sh"><div class="st">⭐ Elite Member Holders</div></div>
+      <table>
+        <thead><tr><th>#</th><th>Wallet</th><th style="text-align:center">Serials</th><th>Link</th></tr></thead>
+        <tbody id="nft-elite-body"><tr><td colspan="4" class="empty">···</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+  <div style="padding:10px 18px;font-size:7px;color:var(--muted)">
+    Multiplier bonus: 1 NFT = 1.05x · 2 NFTs = 1.10x · 3 NFTs = 1.15x · 4+ NFTs = 1.20x (see litepaper for exact values)
+  </div>
+</div>
+
+<!-- ═══════════════════ CHECK ═══════════════════ -->
+<div class="page" id="page-check">
+  <div class="sec">
+    <div class="sh"><div class="st">🔍 Wallet Eligibility Checker</div></div>
+    <div class="checker-wrap">
+      <div class="checker-input-row">
+        <input class="checker-input" id="chk-input" type="text" placeholder="Enter wallet address: 0.0.XXXXXX" onkeydown="if(event.key==='Enter')checkWallet()">
+        <button class="checker-btn" onclick="checkWallet()">CHECK WALLET</button>
+      </div>
+      <div id="chk-result" style="display:none"></div>
+      <div id="chk-loading" style="display:none;color:var(--muted);font-size:8px;letter-spacing:2px">FETCHING DATA...</div>
+    </div>
+  </div>
+  <div class="sec" style="margin-top:3px">
+    <div class="sh"><div class="st">ℹ️ Status Definitions</div></div>
+    <div style="padding:14px 18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+      <div style="font-size:8px"><span style="color:var(--red);font-weight:700">🐋 WHALE</span><div style="color:var(--muted);margin-top:3px">Holds &gt;1M SMACKM</div></div>
+      <div style="font-size:8px"><span style="color:var(--green);font-weight:700">⚡ ACTIVE PLAYER</span><div style="color:var(--muted);margin-top:3px">Received game rewards in last 30d</div></div>
+      <div style="font-size:8px"><span style="color:var(--blue);font-weight:700">💎 HOLDER</span><div style="color:var(--muted);margin-top:3px">Has SMACKM, no recent game activity</div></div>
+      <div style="font-size:8px"><span style="color:var(--yellow);font-weight:700">✨ NEW WALLET</span><div style="color:var(--muted);margin-top:3px">First SMACKM tx within 7 days</div></div>
+    </div>
   </div>
 </div>
 
@@ -600,6 +696,51 @@ function _setPrice(p) {
   document.getElementById('hp-price').style.color = 'var(--yellow)';
   document.getElementById('hp-sub').textContent = 'SAUCERSWAP LIVE';
   document.getElementById('k-mc').textContent = 'Mcap ' + mc;
+  savePriceHistory(p);
+  showPriceChange(p);
+}
+
+// ── Price History (24h change) ────────────────────────────────────────────────
+function savePriceHistory(p) {
+  const key = 'smackm_price_history';
+  let hist = [];
+  try { hist = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) {}
+  hist.push({ price: p, ts: Date.now() });
+  // Keep last 48 entries (~24h at 30min intervals)
+  if (hist.length > 48) hist = hist.slice(-48);
+  localStorage.setItem(key, JSON.stringify(hist));
+}
+
+function showPriceChange(current) {
+  const key = 'smackm_price_history';
+  let hist = [];
+  try { hist = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) {}
+
+  const target = Date.now() - 24*3600*1000;
+  // Find entry closest to 24h ago
+  const old = hist.reduce((best, entry) => {
+    if (!best) return entry;
+    return Math.abs(entry.ts - target) < Math.abs(best.ts - target) ? entry : best;
+  }, null);
+
+  const chgEl  = document.getElementById('k-p-chg');
+  const hpChg  = document.getElementById('hp-chg');
+
+  if (!old || Math.abs(old.ts - target) > 6*3600*1000 || old.price === current) {
+    // No history close enough to 24h ago
+    if (chgEl) { chgEl.textContent = '— 24h'; chgEl.className = 'pchg flat'; }
+    if (hpChg) { hpChg.textContent = ''; hpChg.className = 'hp-chg flat'; }
+    return;
+  }
+
+  const pct = (current - old.price) / old.price * 100;
+  const sign = pct >= 0 ? '+' : '';
+  const label = `${sign}${pct.toFixed(1)}% 24h`;
+  const cls = pct > 0 ? 'up' : pct < 0 ? 'dn' : 'flat';
+  const arrow = pct > 0 ? '▲ ' : pct < 0 ? '▼ ' : '';
+
+  if (chgEl) { chgEl.textContent = arrow + label; chgEl.className = `pchg ${cls}`; }
+  if (hpChg) { hpChg.textContent = arrow + `${sign}${pct.toFixed(1)}%`; hpChg.className = `hp-chg ${cls}`; }
 }
 
 // ── Holders ──────────────────────────────────────────────────────────────────
@@ -988,6 +1129,195 @@ async function loadVesting() {
   }
 }
 
+// ── NFT Holdings ─────────────────────────────────────────────────────────────
+const NFT_MULT  = '0.0.8259328';
+const NFT_ELITE = '0.0.9153866';
+const MULT_BONUS = {1:'1.05x', 2:'1.10x', 3:'1.15x'};
+function multBonus(n) { return n >= 4 ? '1.20x' : MULT_BONUS[n] || '—'; }
+
+async function fetchAllNFTs(tokenId) {
+  let all = [], u = `${MIRROR}/tokens/${tokenId}/nfts?limit=100&order=desc`;
+  let p = 0;
+  while (u && p < 10) {
+    try {
+      const d = await api(u);
+      all = all.concat(d.nfts || []);
+      u = d.links?.next ? 'https://mainnet-public.mirrornode.hedera.com' + d.links.next : null;
+      p++;
+    } catch(e) { break; }
+  }
+  return all;
+}
+
+async function loadNFTs() {
+  // Reset to loading state
+  ['nft-mult-total','nft-mult-holders','nft-elite-total','nft-elite-holders']
+    .forEach(id => { const e=document.getElementById(id); if(e){e.textContent='···';e.classList.add('loading');} });
+
+  const [multNFTs, eliteNFTs] = await Promise.all([
+    fetchAllNFTs(NFT_MULT),
+    fetchAllNFTs(NFT_ELITE)
+  ]);
+
+  // ── Multiplier NFTs ──
+  const multMap = {};
+  multNFTs.forEach(n => {
+    if (!n.account_id) return; // burned/unowned
+    multMap[n.account_id] = (multMap[n.account_id] || 0) + 1;
+  });
+  const multHolders = Object.entries(multMap).sort((a,b) => b[1]-a[1]);
+
+  sk('nft-mult-total',   multNFTs.length,         'yellow');
+  sk('nft-mult-holders', multHolders.length,      'yellow');
+
+  const mb = document.getElementById('nft-mult-body');
+  if (!multHolders.length) {
+    mb.innerHTML = '<tr><td colspan="4" class="empty">No Multiplier NFT holders found</td></tr>';
+  } else {
+    mb.innerHTML = multHolders.slice(0,20).map(([acct,cnt],i) => {
+      const rc = i===0?'r1':i===1?'r2':i===2?'r3':'';
+      return `<tr>
+        <td class="rk ${rc}">${i+1}</td>
+        <td class="wa"><a href="https://hashscan.io/mainnet/account/${acct}" target="_blank">${acct}</a>${WL[acct]?`<div class="ws">${WL[acct]}</div>`:''}</td>
+        <td style="text-align:center;font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--yellow)">${cnt}</td>
+        <td style="text-align:center"><span class="mult-badge">${multBonus(cnt)}</span></td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ── Elite NFTs ──
+  const eliteMap = {};
+  eliteNFTs.forEach(n => {
+    if (!n.account_id) return;
+    if (!eliteMap[n.account_id]) eliteMap[n.account_id] = [];
+    eliteMap[n.account_id].push(n.serial_number);
+  });
+  const eliteHolders = Object.entries(eliteMap).sort((a,b) => b[1].length - a[1].length);
+
+  sk('nft-elite-total',   eliteNFTs.length,       'yellow');
+  sk('nft-elite-holders', eliteHolders.length,    'yellow');
+
+  const eb = document.getElementById('nft-elite-body');
+  if (!eliteHolders.length) {
+    eb.innerHTML = '<tr><td colspan="4" class="empty">No Elite NFT holders found</td></tr>';
+  } else {
+    eb.innerHTML = eliteHolders.slice(0,20).map(([acct,serials],i) => {
+      const rc = i===0?'r1':i===1?'r2':i===2?'r3':'';
+      return `<tr>
+        <td class="rk ${rc}">${i+1}</td>
+        <td class="wa"><a href="https://hashscan.io/mainnet/account/${acct}" target="_blank">${acct}</a></td>
+        <td style="text-align:center;font-size:8px;color:var(--yellow)">#${serials.join(', #')}</td>
+        <td style="font-size:8px"><a href="https://hashscan.io/mainnet/account/${acct}" target="_blank" style="color:var(--blue);text-decoration:none">HashScan ↗</a></td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+// ── Wallet Checker ────────────────────────────────────────────────────────────
+async function checkWallet() {
+  const input  = document.getElementById('chk-input');
+  const result = document.getElementById('chk-result');
+  const loading = document.getElementById('chk-loading');
+  const acct   = (input?.value || '').trim();
+
+  if (!acct.match(/^0\.0\.\d+$/)) {
+    result.style.display = 'block';
+    result.innerHTML = '<div style="color:var(--red);font-size:9px;padding:10px 0">Invalid address format. Use: 0.0.XXXXXX</div>';
+    return;
+  }
+
+  result.style.display = 'none';
+  loading.style.display = 'block';
+
+  try {
+    const cut30 = Math.floor(Date.now()/1000) - 30*86400;
+    const cut7  = Math.floor(Date.now()/1000) - 7*86400;
+
+    // Parallel fetch: account info, SMACKM txs, Multiplier NFTs, Elite NFTs
+    const [accData, txData, mData, eData] = await Promise.all([
+      api(`${MIRROR}/accounts/${acct}`).catch(() => null),
+      api(`${MIRROR}/transactions?account.id=${acct}&limit=100&order=desc&result=SUCCESS&transactiontype=CRYPTOTRANSFER`).catch(() => ({transactions:[]})),
+      api(`${MIRROR}/tokens/${NFT_MULT}/nfts?account.id=${acct}&limit=50`).catch(() => ({nfts:[]})),
+      api(`${MIRROR}/tokens/${NFT_ELITE}/nfts?account.id=${acct}&limit=50`).catch(() => ({nfts:[]})),
+    ]);
+
+    // SMACKM balance from already-loaded bals, fallback to API
+    let smackmBal = bals.find(b => b.account === acct);
+    if (!smackmBal) {
+      const bd = await api(`${MIRROR}/tokens/${TOKEN}/balances?account.id=${acct}`).catch(() => null);
+      smackmBal = bd?.balances?.[0] || null;
+    }
+    const smackm = smackmBal ? r2a(smackmBal.balance) : 0;
+
+    // NFT counts
+    const multCount  = (mData.nfts || []).length;
+    const eliteCount = (eData.nfts || []).length;
+
+    // SMACKM transactions for this wallet
+    const smackmTxs = (txData.transactions || []).filter(tx =>
+      tx.token_transfers?.some(t => t.token_id === TOKEN && t.account === acct)
+    );
+
+    // First SMACKM tx (oldest in results)
+    const firstTx = smackmTxs.length
+      ? smackmTxs.reduce((a,b) => parseFloat(a.consensus_timestamp) < parseFloat(b.consensus_timestamp) ? a : b)
+      : null;
+    const firstDate = firstTx
+      ? new Date(parseFloat(firstTx.consensus_timestamp)*1000).toLocaleDateString('en-GB',{month:'short',year:'numeric'})
+      : '—';
+    const firstTs = firstTx ? parseFloat(firstTx.consensus_timestamp) : null;
+
+    // Total SMACKM received ever (from fetched txs)
+    const totalReceived = smackmTxs.reduce((s, tx) => {
+      const t = (tx.token_transfers||[]).find(t => t.token_id === TOKEN && t.account === acct && t.amount > 0);
+      return s + (t ? r2a(t.amount) : 0);
+    }, 0);
+
+    // Game rewards last 30d
+    const gameRewards30 = smackmTxs.reduce((s, tx) => {
+      const tp = parseFloat(tx.consensus_timestamp);
+      if (tp < cut30) return s;
+      const m = gm(tx).toLowerCase();
+      const isGame = m.includes('game') || m.includes('reward') || m.includes('earn');
+      if (!isGame) return s;
+      const t = (tx.token_transfers||[]).find(t => t.token_id === TOKEN && t.account === acct && t.amount > 0);
+      return s + (t ? r2a(t.amount) : 0);
+    }, 0);
+
+    // Status logic
+    let status, statusCls;
+    if (smackm >= 1000000) {
+      status = '🐋 WHALE'; statusCls = 'whale';
+    } else if (gameRewards30 > 0) {
+      status = '⚡ ACTIVE PLAYER'; statusCls = 'active';
+    } else if (firstTs && firstTs > cut7) {
+      status = '✨ NEW WALLET'; statusCls = 'neww';
+    } else if (smackm > 0) {
+      status = '💎 HOLDER'; statusCls = 'holder';
+    } else {
+      status = '○ NO SMACKM'; statusCls = 'holder';
+    }
+
+    loading.style.display = 'none';
+    result.style.display = 'block';
+    result.innerHTML = `
+      <div class="result-card ${statusCls}">
+        <div class="rc-head">WALLET · ${acct}</div>
+        <div class="rc-row"><div class="rc-lbl">SMACKM Balance</div><div class="rc-val" style="color:var(--yellow)">${fmt(smackm)}</div></div>
+        <div class="rc-row"><div class="rc-lbl">Multiplier NFTs</div><div class="rc-val">${multCount > 0 ? `${multCount} <span style="font-size:11px;color:var(--orange)">(${multBonus(multCount)})</span>` : '0'}</div></div>
+        <div class="rc-row"><div class="rc-lbl">Elite Member</div><div class="rc-val" style="color:${eliteCount>0?'var(--yellow)':'var(--muted)'}">${eliteCount > 0 ? `✓ YES (${eliteCount})` : 'NO'}</div></div>
+        <div class="rc-row"><div class="rc-lbl">Game Rewards 30d</div><div class="rc-val" style="color:${gameRewards30>0?'var(--green)':'var(--muted)'}">${fmt(gameRewards30)} SMACKM</div></div>
+        <div class="rc-row"><div class="rc-lbl">Total Received</div><div class="rc-val">${fmt(totalReceived)} SMACKM</div></div>
+        <div class="rc-row"><div class="rc-lbl">Holder Since</div><div class="rc-val" style="font-size:13px">${firstDate}</div></div>
+        <div class="rc-status ${statusCls}">${status}</div>
+      </div>`;
+  } catch(e) {
+    loading.style.display = 'none';
+    result.style.display = 'block';
+    result.innerHTML = `<div style="color:var(--red);font-size:9px;padding:10px 0">Error fetching wallet data: ${e.message}</div>`;
+  }
+}
+
 // ── Notes ─────────────────────────────────────────────────────────────────────
 function saveN() {
   const t = document.getElementById('notesA').value;
@@ -1068,7 +1398,7 @@ async function loadAll() {
   await loadTokenInfo();
   await loadPrice();
   await loadHolders();
-  await Promise.all([loadWhales(), loadGame(), loadNewH(), loadVesting(), loadPoolTx(), loadTreasury()]);
+  await Promise.all([loadWhales(), loadGame(), loadNewH(), loadVesting(), loadPoolTx(), loadTreasury(), loadNFTs()]);
   sl(true, 'LIVE · MAINNET');
   document.getElementById('lastRef').textContent = new Date().toLocaleTimeString('en-GB');
 }
