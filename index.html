@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🦟 SMACKM Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0A0A0A;--s1:#111111;--s2:#1A1A1A;--s3:#242424;
+  --orange:#FF6B35;--yellow:#FFD700;--green:#00FF88;
+  --red:#FF3355;--blue:#38B6FF;--purple:#9D6EF5;
+  --text:#F0F0F0;--muted:#666666;--border:#2A2A2A;
+  --font:'Space Mono',monospace;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,107,53,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,107,53,.018) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+.shell{position:relative;z-index:1}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--s1);border-bottom:2px solid var(--orange);padding:0 20px;height:58px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--orange);letter-spacing:3px;flex-shrink:0;white-space:nowrap}
+.logo-price{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;padding:0 14px;border-left:1px solid var(--border);border-right:1px solid var(--border)}
+.hp-val{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--yellow);line-height:1}
+.hp-sub{font-size:7px;margin-top:1px;letter-spacing:1px;color:var(--muted);text-transform:uppercase}
+.nav-pill{display:flex;gap:3px;background:var(--s2);border:1px solid var(--border);border-radius:4px;padding:4px;overflow-x:auto;flex:1;min-width:0}
+.nav-btn{padding:6px 13px;font-size:9px;letter-spacing:1px;text-transform:uppercase;background:none;border:none;color:var(--muted);cursor:pointer;border-radius:3px;transition:all .15s;font-family:var(--font);white-space:nowrap}
+.nav-btn.active{background:var(--orange);color:#000;font-weight:700}
+.nav-btn:hover:not(.active){background:var(--s3);color:var(--text)}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.live-badge{display:flex;align-items:center;gap:5px;font-size:8px;color:var(--muted);letter-spacing:1px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 2s infinite;flex-shrink:0}
+.live-dot.dead{background:var(--red);animation:none}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.lastref{font-size:7px;color:var(--muted)}
+.tbtn{background:none;border:1px solid var(--border);color:var(--muted);font-family:var(--font);font-size:8px;padding:6px 12px;cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all .2s;white-space:nowrap}
+.tbtn:hover{border-color:var(--orange);color:var(--orange)}
+.tbtn.exp{border-color:var(--yellow);color:var(--yellow)}
+.tbtn.exp:hover{background:var(--yellow);color:#000}
+
+/* ── ALERT ── */
+#alertBanner{display:none;background:rgba(255,51,85,.07);border-bottom:1px solid var(--red);padding:9px 20px;align-items:center;gap:10px;font-size:9px;color:var(--red)}
+#alertBanner.show{display:flex}
+
+/* ── PAGES ── */
+.page{display:none;padding:20px 20px 70px}
+.page.active{display:block}
+
+/* ── KPI CARDS ── */
+.krow{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:3px;margin-bottom:16px}
+.kpi{background:var(--s1);border:1px solid var(--border);border-top:2px solid var(--kc,var(--orange));padding:18px 16px;transition:border-color .2s}
+.kpi:hover{border-color:var(--kc,var(--orange))}
+.klbl{font-size:8px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.kval{font-family:'Bebas Neue',sans-serif;font-size:48px;line-height:1;color:var(--kc,var(--orange))}
+.kval.sm{font-size:32px}
+.kval.loading{color:var(--s3);font-size:28px}
+.ksub{font-size:8px;color:var(--muted);margin-top:4px}
+.kdelta{font-size:9px;margin-top:4px}
+.kdelta.up{color:var(--green)}.kdelta.dn{color:var(--red)}
+
+/* ── SECTIONS ── */
+.sec{background:var(--s1);border:1px solid var(--border);margin-bottom:3px}
+.sh{padding:11px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.st{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.mb{background:none;border:1px solid var(--border);color:var(--muted);font-family:var(--font);font-size:7px;padding:4px 10px;cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all .15s}
+.mb:hover{border-color:var(--orange);color:var(--orange)}
+
+/* ── WHALE FEED ── */
+.wfeed{overflow-y:auto}
+.wi{display:flex;align-items:center;gap:12px;padding:10px 18px;border-bottom:1px solid #161616;transition:background .1s}
+.wi:hover{background:var(--s2)}
+.wi:last-child{border-bottom:none}
+.wbar{width:3px;height:36px;border-radius:2px;flex-shrink:0}
+.wbar.buy{background:var(--green)}.wbar.sell{background:var(--red)}.wbar.tr{background:var(--blue)}.wbar.ai{background:var(--yellow)}.wbar.gm{background:var(--purple)}
+.wbody{flex:1;min-width:0}
+.wtop{display:flex;align-items:center;gap:8px;margin-bottom:3px}
+.wamt{font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1}
+.wamt.gn{color:var(--green)}.wamt.rd{color:var(--red)}.wamt.bl{color:var(--blue)}.wamt.pu{color:var(--purple)}.wamt.yw{color:var(--yellow)}.wamt.mega{font-size:28px;color:var(--orange)}
+.wbadge{padding:2px 5px;font-size:6px;letter-spacing:1px;text-transform:uppercase;border:1px solid}
+.wbadge.buy{color:var(--green);border-color:var(--green)}.wbadge.sell{color:var(--red);border-color:var(--red)}.wbadge.tr{color:var(--blue);border-color:var(--blue)}.wbadge.ai{color:var(--yellow);border-color:var(--yellow)}.wbadge.gm{color:var(--purple);border-color:var(--purple)}
+.wsub{font-size:7px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wtime{font-size:7px;color:var(--muted);flex-shrink:0;text-align:right;min-width:50px}
+
+/* ── TABLES ── */
+table{width:100%;border-collapse:collapse}
+th{padding:9px 18px;text-align:left;font-size:7px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);font-weight:400;background:var(--s2)}
+td{padding:10px 18px;font-size:9px;border-bottom:1px solid #161616;vertical-align:middle}
+tr:nth-child(even) td{background:rgba(255,255,255,.012)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--s2)}
+.rk{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--muted);width:28px}
+.rk.r1{color:var(--yellow)}.rk.r2{color:var(--orange)}.rk.r3{color:#CC5522}
+.wa a{color:var(--blue);text-decoration:none}.wa a:hover{text-decoration:underline}
+.ws{font-size:7px;color:var(--muted);margin-top:1px}
+.ab{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--text);text-align:right}
+.pbw{width:80px}.pb{height:2px;background:var(--border);overflow:hidden;margin-top:3px}.pbf{height:100%;background:var(--orange)}.pct{font-size:7px;color:var(--muted)}
+.tag{padding:1px 5px;font-size:6px;letter-spacing:1px;text-transform:uppercase;border:1px solid}
+.tag.a{color:var(--orange);border-color:var(--orange)}.tag.g{color:var(--green);border-color:var(--green)}.tag.r{color:var(--red);border-color:var(--red)}.tag.b{color:var(--blue);border-color:var(--blue)}.tag.y{color:var(--yellow);border-color:var(--yellow)}.tag.p{color:var(--purple);border-color:var(--purple)}
+.newb{display:inline-block;padding:1px 5px;font-size:6px;letter-spacing:1px;border:1px solid var(--green);color:var(--green);margin-left:4px}
+
+/* ── CHARTS ── */
+.cw{padding:14px 18px 28px}
+.cbars{display:flex;align-items:flex-end;gap:3px;height:90px}
+.cbar{flex:1;opacity:.55;min-height:2px;position:relative;cursor:pointer;transition:opacity .15s;border-radius:1px 1px 0 0}
+.cbar:hover{opacity:1}
+.ctip{display:none;position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--s3);border:1px solid var(--border);padding:3px 7px;font-size:7px;white-space:nowrap;z-index:10}
+.cbar:hover .ctip{display:block}
+.clbls{display:flex;gap:3px;margin-top:5px}
+.clbl{flex:1;font-size:6px;color:var(--muted);text-align:center}
+
+/* ── LAYOUTS ── */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:3px}
+@media(max-width:700px){.two{grid-template-columns:1fr}.krow{grid-template-columns:1fr 1fr}}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:3px;padding:16px}
+.pc{background:var(--s2);border:1px solid var(--border);padding:14px}
+.pclbl{font-size:7px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px}
+.pcval{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--blue)}
+.pcsub{font-size:7px;color:var(--muted);margin-top:2px}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:3px;padding:16px}
+.vc{background:var(--s2);border:1px solid var(--border);padding:14px}
+.vc.warn{border-color:var(--red)}.vc.ok{border-color:var(--border)}
+.vlbl{font-size:7px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+.vaddr{font-size:9px;margin-bottom:8px}.vaddr a{color:var(--blue);text-decoration:none}
+.vval{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--orange)}
+.vsub{font-size:7px;color:var(--muted);margin-top:2px}
+.vstatus{margin-top:9px;padding-top:9px;border-top:1px solid var(--border);font-size:7px;display:flex;justify-content:space-between;align-items:center}
+
+/* ── TREASURY CARDS ── */
+.treas-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:16px}
+@media(max-width:700px){.treas-grid{grid-template-columns:1fr}}
+.tcard{background:var(--s2);border:1px solid var(--border);padding:18px}
+.tcard.warn{border-color:var(--red);background:rgba(255,51,85,.04)}
+.tcard-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.tcard-name{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--text);letter-spacing:1px}
+.tstatus{padding:3px 7px;font-size:6px;letter-spacing:1px;text-transform:uppercase;border:1px solid}
+.tstatus.ok{color:var(--green);border-color:var(--green)}.tstatus.warn{color:var(--red);border-color:var(--red)}
+.trow{display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid #1E1E1E}
+.trow:last-child{border-bottom:none}
+.tlbl{font-size:7px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.tval{font-family:'Bebas Neue',sans-serif;font-size:18px}
+.tval.ok{color:var(--green)}.tval.warn{color:var(--red)}.tval.neutral{color:var(--text)}
+.tlink{font-size:7px;color:var(--blue);text-decoration:none;display:block;margin-top:10px}
+.tlink:hover{text-decoration:underline}
+
+/* ── NOTES ── */
+.nwrap{padding:16px 18px}
+textarea{width:100%;background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:10px;padding:12px;resize:vertical;min-height:100px;line-height:1.7;outline:none;transition:border-color .2s}
+textarea:focus{border-color:var(--orange)}
+.sbtn{margin-top:8px;padding:8px 18px;background:none;border:1px solid var(--orange);color:var(--orange);font-family:var(--font);font-size:8px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.sbtn:hover{background:var(--orange);color:#000}
+.nsaved{font-size:8px;color:var(--green);margin-left:10px;opacity:0;transition:opacity .3s}
+
+/* ── MISC ── */
+.empty{padding:24px 18px;text-align:center;color:var(--muted);font-size:8px;letter-spacing:2px}
+#rModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:200;align-items:center;justify-content:center;padding:20px}
+#rModal.open{display:flex}
+.rm{background:var(--s1);border:1px solid var(--border);width:100%;max-width:700px;max-height:90vh;overflow-y:auto}
+.rmh{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.rmt{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--yellow)}
+.rmc{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer}
+.rmb{padding:20px}.rmb pre{background:var(--s2);border:1px solid var(--border);padding:16px;white-space:pre-wrap;word-break:break-all;font-size:8px;line-height:1.9;color:var(--text)}
+.rmbtns{display:flex;gap:8px;padding:16px 20px;border-top:1px solid var(--border)}
+.rmbtn{padding:8px 18px;background:none;border:1px solid;font-family:var(--font);font-size:8px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.rmbtn.cp{border-color:var(--blue);color:var(--blue)}.rmbtn.cp:hover{background:var(--blue);color:#000}
+.rmbtn.dl{border-color:var(--yellow);color:var(--yellow)}.rmbtn.dl:hover{background:var(--yellow);color:#000}
+.rmbtn.cl{border-color:var(--border);color:var(--muted)}.rmbtn.cl:hover{border-color:var(--red);color:var(--red)}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">🦟 SMACKM</div>
+  <div class="logo-price">
+    <div class="hp-val" id="hp-price">···</div>
+    <div class="hp-sub" id="hp-sub">LIVE PRICE</div>
+  </div>
+  <div class="nav-pill">
+    <button class="nav-btn active" data-page="overview" onclick="sp('overview')">📊 OVERVIEW</button>
+    <button class="nav-btn" data-page="holders" onclick="sp('holders')">🌱 HOLDERS</button>
+    <button class="nav-btn" data-page="game" onclick="sp('game')">🎮 GAME</button>
+    <button class="nav-btn" data-page="whales" onclick="sp('whales')">🐋 WHALES</button>
+    <button class="nav-btn" data-page="pool" onclick="sp('pool')">💧 POOL</button>
+    <button class="nav-btn" data-page="vesting" onclick="sp('vesting')">🔒 VESTING</button>
+  </div>
+  <div class="topbar-right">
+    <div class="live-badge"><div class="live-dot" id="ld"></div><span id="ls">···</span></div>
+    <div class="lastref" id="lastRef"></div>
+    <button class="tbtn exp" onclick="genReport()">📋 EXPORT REPORT</button>
+    <button class="tbtn" onclick="loadAll()">↻</button>
+  </div>
+</div>
+
+<!-- ALERT -->
+<div id="alertBanner">
+  <span id="alertTxt"></span>
+  <button style="background:none;border:none;color:var(--red);cursor:pointer;margin-left:auto;font-size:16px" onclick="hideAlert()">✕</button>
+</div>
+
+<!-- ═══════════════════ OVERVIEW ═══════════════════ -->
+<div class="page active" id="page-overview">
+  <div class="krow">
+    <div class="kpi" style="--kc:var(--green)">
+      <div class="klbl">New Holders 7d</div>
+      <div class="kval loading" id="k-new">···</div>
+      <div class="kdelta up" id="k-new-d">wallets</div>
+    </div>
+    <div class="kpi" style="--kc:var(--blue)">
+      <div class="klbl">Total Holders</div>
+      <div class="kval loading" id="k-h">···</div>
+      <div class="ksub" id="k-h-s">active wallets</div>
+    </div>
+    <div class="kpi" style="--kc:var(--purple)">
+      <div class="klbl">Game Rewards 24h</div>
+      <div class="kval loading sm" id="k-g">···</div>
+      <div class="ksub">SMACKM distributed</div>
+    </div>
+    <div class="kpi" style="--kc:var(--purple)">
+      <div class="klbl">Players 7d</div>
+      <div class="kval loading" id="k-pl">···</div>
+      <div class="ksub">unique wallets</div>
+    </div>
+    <div class="kpi" style="--kc:var(--red)">
+      <div class="klbl">Whale Moves 24h</div>
+      <div class="kval loading" id="k-w">···</div>
+      <div class="ksub">&gt;100K SMACKM</div>
+    </div>
+    <div class="kpi" style="--kc:var(--yellow)">
+      <div class="klbl">Price USD</div>
+      <div class="kval loading sm" id="k-p">···</div>
+      <div class="ksub" id="k-mc">Market cap ···</div>
+    </div>
+  </div>
+  <div class="two">
+    <div class="sec">
+      <div class="sh"><div class="st">🌱 Holder Activity 14d</div></div>
+      <div class="cw"><div class="cbars" id="hcOv"><div class="empty" style="width:100%">···</div></div><div class="clbls" id="hcOvL"></div></div>
+    </div>
+    <div class="sec">
+      <div class="sh"><div class="st">🎮 Game Activity 14d</div><button class="mb" onclick="sp('game')">VIEW ALL →</button></div>
+      <div class="cw"><div class="cbars" id="gcOv"><div class="empty" style="width:100%">···</div></div><div class="clbls" id="gcOvL"></div></div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sh"><div class="st">🐋 Live Whale Alerts</div><button class="mb" onclick="sp('whales')">VIEW ALL →</button></div>
+    <div class="wfeed" style="max-height:210px" id="ovW"><div class="empty">···</div></div>
+  </div>
+  <div class="two">
+    <div class="sec">
+      <div class="sh"><div class="st">💧 LP Pool</div><button class="mb" onclick="sp('pool')">VIEW ALL →</button></div>
+      <div class="pgrid" style="grid-template-columns:1fr 1fr;padding:12px">
+        <div class="pc"><div class="pclbl">Liquidity</div><div class="pcval" id="ov-liq">···</div><div class="pcsub">SaucerSwap V1</div></div>
+        <div class="pc"><div class="pclbl">Volume 24h</div><div class="pcval">$6.9K</div><div class="pcsub">SaucerSwap</div></div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sh"><div class="st">🔒 Vesting Snapshot</div><button class="mb" onclick="sp('vesting')">VIEW ALL →</button></div>
+      <div class="vgrid" style="grid-template-columns:1fr 1fr;padding:10px" id="ovV"><div class="empty">···</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ HOLDERS ═══════════════════ -->
+<div class="page" id="page-holders">
+  <div class="krow" style="grid-template-columns:repeat(4,1fr)">
+    <div class="kpi" style="--kc:var(--green)"><div class="klbl">New 7d</div><div class="kval loading" id="hk-n">···</div><div class="ksub">wallets</div></div>
+    <div class="kpi" style="--kc:var(--blue)"><div class="klbl">Total</div><div class="kval loading" id="hk-t">···</div><div class="ksub">active holders</div></div>
+    <div class="kpi" style="--kc:var(--orange)"><div class="klbl">Community Share</div><div class="kval loading" id="hk-c">···</div><div class="ksub">excl. team &amp; pool</div></div>
+    <div class="kpi" style="--kc:var(--green)"><div class="klbl">Retention</div><div class="kval loading" id="hk-r">···</div><div class="ksub">long-term holders</div></div>
+  </div>
+  <div class="sec" style="margin-bottom:16px">
+    <div class="sh"><div class="st">📈 Transaction Activity 14d</div></div>
+    <div class="cw"><div class="cbars" id="hcFull" style="height:100px"><div class="empty" style="width:100%">···</div></div><div class="clbls" id="hcFullL"></div></div>
+  </div>
+  <div class="two">
+    <div class="sec">
+      <div class="sh"><div class="st">🏆 Top 20 Holders</div><button class="mb" onclick="loadHolders()">↻</button></div>
+      <table><thead><tr><th>#</th><th>Wallet</th><th style="text-align:right">Balance</th><th>Share</th></tr></thead>
+      <tbody id="hBody"><tr><td colspan="4" class="empty">···</td></tr></tbody></table>
+    </div>
+    <div class="sec">
+      <div class="sh"><div class="st">✨ New Holders (7d)</div><button class="mb" onclick="loadNewH()">↻</button></div>
+      <table><thead><tr><th>#</th><th>Wallet</th><th style="text-align:right">Balance</th></tr></thead>
+      <tbody id="nhBody"><tr><td colspan="3" class="empty">···</td></tr></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ GAME ═══════════════════ -->
+<div class="page" id="page-game">
+  <div class="krow" style="grid-template-columns:repeat(4,1fr)">
+    <div class="kpi" style="--kc:var(--purple)"><div class="klbl">Rewards 24h</div><div class="kval loading sm" id="gk-d">···</div><div class="ksub">SMACKM</div></div>
+    <div class="kpi" style="--kc:var(--purple)"><div class="klbl">Rewards 7d</div><div class="kval loading sm" id="gk-w">···</div><div class="ksub">SMACKM</div></div>
+    <div class="kpi" style="--kc:var(--purple)"><div class="klbl">Players 7d</div><div class="kval loading" id="gk-p">···</div><div class="ksub">unique wallets</div></div>
+    <div class="kpi" style="--kc:var(--purple)"><div class="klbl">Avg Reward</div><div class="kval loading sm" id="gk-a">···</div><div class="ksub">SMACKM/player</div></div>
+  </div>
+  <div class="two">
+    <div class="sec">
+      <div class="sh"><div class="st">🎮 Activity 14d</div></div>
+      <div class="cw"><div class="cbars" id="gcFull" style="height:100px"><div class="empty" style="width:100%">···</div></div><div class="clbls" id="gcFullL"></div></div>
+    </div>
+    <div class="sec">
+      <div class="sh"><div class="st">📋 Game Events</div><button class="mb" onclick="loadGame()">↻</button></div>
+      <div class="wfeed" style="max-height:260px" id="gFeed"><div class="empty">···</div></div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sh"><div class="st">📝 Team Notes</div></div>
+    <div class="nwrap">
+      <textarea id="notesA" placeholder="Write team notes here... (saved to browser)"></textarea>
+      <button class="sbtn" onclick="saveN()">💾 SAVE</button>
+      <span class="nsaved" id="ns">✓ Saved</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ WHALES ═══════════════════ -->
+<div class="page" id="page-whales">
+  <div class="krow" style="grid-template-columns:repeat(4,1fr)">
+    <div class="kpi" style="--kc:var(--red)"><div class="klbl">Whale Txs 24h</div><div class="kval loading" id="wk-c">···</div><div class="ksub">&gt;100K SMACKM</div></div>
+    <div class="kpi" style="--kc:var(--green)"><div class="klbl">Biggest Buy 24h</div><div class="kval loading sm" id="wk-b">···</div><div class="ksub">SMACKM</div></div>
+    <div class="kpi" style="--kc:var(--red)"><div class="klbl">Biggest Sell 24h</div><div class="kval loading sm" id="wk-s">···</div><div class="ksub">SMACKM</div></div>
+    <div class="kpi"><div class="klbl">Pressure</div><div class="kval loading sm" id="wk-p">···</div><div class="ksub" id="wk-ps"></div></div>
+  </div>
+  <div class="sec">
+    <div class="sh"><div class="st">🐋 All Large Moves</div><button class="mb" onclick="loadWhales()">↻</button></div>
+    <div class="wfeed" style="max-height:520px" id="wFull"><div class="empty">···</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ POOL ═══════════════════ -->
+<div class="page" id="page-pool">
+  <div class="sec">
+    <div class="sh"><div class="st">💧 SaucerSwap V1 — SMACKM/WHBAR</div><button class="mb" onclick="loadPrice()">↻ REFRESH</button></div>
+    <div class="pgrid">
+      <div class="pc"><div class="pclbl">Liquidity USD</div><div class="pcval" id="pp-liq">···</div><div class="pcsub">from reserves</div></div>
+      <div class="pc"><div class="pclbl">SMACKM in Pool</div><div class="pcval" id="pp-smackm">···</div><div class="pcsub">SMACKM reserve</div></div>
+      <div class="pc"><div class="pclbl">WHBAR in Pool</div><div class="pcval" id="pp-whbar">···</div><div class="pcsub">WHBAR reserve</div></div>
+      <div class="pc"><div class="pclbl">Pool % of Supply</div><div class="pcval loading" id="pp-pct">···</div><div class="pcsub">of total supply</div></div>
+      <div class="pc"><div class="pclbl">Price USD</div><div class="pcval" id="pp-price">···</div><div class="pcsub">live AMM price</div></div>
+      <div class="pc"><div class="pclbl">Volume 24h</div><div class="pcval">$6.9K</div><div class="pcsub">SaucerSwap</div></div>
+    </div>
+  </div>
+  <div class="sec" style="margin-top:3px">
+    <div class="sh"><div class="st">📊 Pool Transfers</div><button class="mb" onclick="loadPoolTx()">↻</button></div>
+    <div class="wfeed" style="max-height:400px" id="pFeed"><div class="empty">···</div></div>
+  </div>
+  <div style="padding:10px 18px;font-size:8px;color:var(--muted)">
+    <a href="https://www.geckoterminal.com/hedera-hashgraph/pools/0x595ce0d0f87d0dc98e152aa316c1c6ae32bbc5b0" target="_blank" style="color:var(--blue);text-decoration:none">GeckoTerminal ↗</a>
+    &nbsp;·&nbsp;
+    <a href="https://hashscan.io/mainnet/account/0.0.8041586" target="_blank" style="color:var(--blue);text-decoration:none">HashScan Pool ↗</a>
+    &nbsp;·&nbsp;
+    <a href="https://app.saucerswap.finance/" target="_blank" style="color:var(--blue);text-decoration:none">SaucerSwap ↗</a>
+  </div>
+</div>
+
+<!-- ═══════════════════ VESTING ═══════════════════ -->
+<div class="page" id="page-vesting">
+
+  <!-- Treasury & Ops Monitoring -->
+  <div class="sec" style="margin-bottom:3px">
+    <div class="sh">
+      <div class="st">🏦 Treasury &amp; Ops Monitoring</div>
+      <button class="mb" onclick="loadTreasury()">↻</button>
+    </div>
+    <div class="treas-grid" id="treasGrid">
+      <div class="empty" style="grid-column:1/-1">···</div>
+    </div>
+  </div>
+
+  <!-- Team Vesting Wallets -->
+  <div class="sec" style="margin-bottom:3px">
+    <div class="sh"><div class="st">🔒 Team Vesting Wallets</div><button class="mb" onclick="loadVesting()">↻</button></div>
+    <div class="vgrid" id="vGrid"><div class="empty">···</div></div>
+  </div>
+
+  <!-- Vesting Tx History -->
+  <div class="sec">
+    <div class="sh"><div class="st">⚠️ Vesting Transaction History</div></div>
+    <table>
+      <thead><tr><th>Time</th><th>Wallet</th><th>Type</th><th style="text-align:right">Amount</th><th>Memo</th></tr></thead>
+      <tbody id="vtBody"><tr><td colspan="5" class="empty">···</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /shell -->
+
+<!-- REPORT MODAL -->
+<div id="rModal">
+  <div class="rm">
+    <div class="rmh"><div class="rmt">🦟 SMACKM TEAM REPORT</div><button class="rmc" onclick="closeR()">✕</button></div>
+    <div class="rmb"><pre id="rContent">···</pre></div>
+    <div class="rmbtns">
+      <button class="rmbtn cp" onclick="copyR()">📋 COPY</button>
+      <button class="rmbtn dl" onclick="dlR()">⬇ DOWNLOAD .TXT</button>
+      <button class="rmbtn cl" onclick="closeR()">CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const TOKEN   = '0.0.8041571';
+const MIRROR  = 'https://mainnet-public.mirrornode.hedera.com/api/v1';
+const WHBAR   = '0.0.1456986';
+const POOL    = '0.0.8041586';
+const WT      = 100000;  // whale threshold SMACKM
+
+const TW = ['0.0.8215507','0.0.8215492','0.0.7891970','0.0.8041465'];
+const WL = {
+  '0.0.7891970': 'Treasury',
+  '0.0.8215507': 'Team A (25%)',
+  '0.0.8215492': 'Team B (16.4%)',
+  '0.0.8041465': 'Ops Wallet',
+  '0.0.8041586': 'SaucerSwap LP',
+  '0.0.10240324': 'Airdrop Wallet'
+};
+
+let DEC = 0, MAX_S = 980000000, PRICE = 0;
+let bals = [], cache = [];
+let snap = {newH:0, totH:0, g24:0, gp:0, wc:0, va:false, notes:''};
+
+// ── Core utils ───────────────────────────────────────────────────────────────
+async function api(u) {
+  const r = await fetch(u);
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+function r2a(x) { return Number(x) / Math.pow(10, DEC); }
+function fmt(n) {
+  if (!n && n !== 0) return '—';
+  if (n >= 1e9) return (n/1e9).toFixed(2)+'B';
+  if (n >= 1e6) return (n/1e6).toFixed(2)+'M';
+  if (n >= 1e3) return (n/1e3).toFixed(1)+'K';
+  return Math.round(n).toLocaleString();
+}
+function fts(t) {
+  if (!t) return '—';
+  return new Date(parseFloat(t)*1000).toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+function ago(t) {
+  const s = Math.floor(Date.now()/1000) - parseFloat(t);
+  if (s < 60)    return s + 's ago';
+  if (s < 3600)  return Math.floor(s/60) + 'm ago';
+  if (s < 86400) return Math.floor(s/3600) + 'h ago';
+  return Math.floor(s/86400) + 'd ago';
+}
+function lbl(a)  { return WL[a] || a; }
+function gm(tx)  { try { return tx.memo_base64 ? atob(tx.memo_base64) : ''; } catch(e) { return ''; } }
+function sk(id, v, c) {
+  const e = document.getElementById(id);
+  if (!e) return;
+  e.textContent = v;
+  e.classList.remove('loading');
+  if (c) e.style.color = `var(--${c})`;
+}
+function sl(ok, m) {
+  document.getElementById('ld').className = 'live-dot' + (ok ? '' : ' dead');
+  document.getElementById('ls').textContent = m;
+}
+function showAlert(m) {
+  document.getElementById('alertTxt').textContent = m;
+  document.getElementById('alertBanner').classList.add('show');
+}
+function hideAlert() { document.getElementById('alertBanner').classList.remove('show'); }
+function sp(n) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + n)?.classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => { if (b.dataset.page === n) b.classList.add('active'); });
+}
+
+// ── Transaction cache ────────────────────────────────────────────────────────
+async function ftx() {
+  if (cache.length) return cache;
+  const accs = ['0.0.7891970','0.0.8041465','0.0.8041586','0.0.10240324'];
+  let t = [];
+  for (const acc of accs) {
+    let u = `${MIRROR}/transactions?account.id=${acc}&limit=100&order=desc&result=SUCCESS&transactiontype=CRYPTOTRANSFER`;
+    let p = 0;
+    while (u && p < 3) {
+      try {
+        const d = await api(u);
+        const f = (d.transactions||[]).filter(x => x.token_transfers?.some(tt => tt.token_id === TOKEN));
+        t = t.concat(f);
+        u = d.links?.next ? 'https://mainnet-public.mirrornode.hedera.com' + d.links.next : null;
+        p++;
+      } catch(e) { break; }
+    }
+  }
+  const seen = new Set();
+  cache = t.filter(tx => {
+    const id = tx.transaction_id;
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+  cache.sort((a, b) => parseFloat(b.consensus_timestamp) - parseFloat(a.consensus_timestamp));
+  return cache;
+}
+
+// ── Chart helpers ────────────────────────────────────────────────────────────
+function bc(bi, li, data, col='orange') {
+  const b = document.getElementById(bi), l = document.getElementById(li);
+  if (!b || !l) return;
+  const en = Object.entries(data), mx = Math.max(...en.map(e => e[1]), 1);
+  b.innerHTML = en.map(([k,v]) => {
+    const h = Math.max(2, Math.round((v/mx)*88));
+    return `<div class="cbar" style="height:${h}px;background:var(--${col})"><div class="ctip">${k}: ${fmt(v)}</div></div>`;
+  }).join('');
+  l.innerHTML = en.map(([k]) => `<div class="clbl">${k}</div>`).join('');
+}
+function dd(txs, fn) {
+  const d = {};
+  const nw = Date.now();
+  for (let i = 13; i >= 0; i--) {
+    const x = new Date(nw - i*86400000);
+    d[x.toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit'})] = 0;
+  }
+  txs.forEach(tx => {
+    if (!fn || fn(tx)) {
+      const x = new Date(parseFloat(tx.consensus_timestamp)*1000);
+      const k = x.toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit'});
+      if (d[k] !== undefined) d[k]++;
+    }
+  });
+  return d;
+}
+
+// ── Token info ───────────────────────────────────────────────────────────────
+async function loadTokenInfo() {
+  try {
+    const d = await api(`${MIRROR}/tokens/${TOKEN}`);
+    DEC   = parseInt(d.decimals) || 0;
+    MAX_S = Number(d.total_supply) / Math.pow(10, DEC);
+    sl(true, 'LIVE · MAINNET');
+    document.getElementById('lastRef').textContent = new Date().toLocaleTimeString('en-GB');
+  } catch(e) { sl(false, 'ERROR'); }
+}
+
+// ── Live Price (SaucerSwap AMM reserves) ─────────────────────────────────────
+async function loadPrice() {
+  try {
+    const [sd, wd, er] = await Promise.all([
+      api(`${MIRROR}/tokens/${TOKEN}/balances?account.id=${POOL}`),
+      api(`${MIRROR}/tokens/${WHBAR}/balances?account.id=${POOL}`),
+      api(`${MIRROR}/network/exchangerate`)
+    ]);
+
+    const smackmRaw = sd.balances?.[0]?.balance || 0;
+    const whbarRaw  = wd.balances?.[0]?.balance  || 0;
+
+    if (!smackmRaw || !whbarRaw) {
+      _setPrice(0.00091); return;
+    }
+
+    // WHBAR has 8 decimals (wraps HBAR 1:1)
+    const smackmAmt = smackmRaw / Math.pow(10, DEC);
+    const whbarAmt  = whbarRaw  / 1e8;
+
+    // On-chain exchange rate (cents per hbar_equivalent HBAR)
+    const rate     = er.current_rate || er.next_rate || {};
+    const hbarUsd  = (rate.cent_equivalent || 0) / (rate.hbar_equivalent || 1) / 100;
+    // Use market fallback if on-chain rate looks wrong
+    const effectiveHbar = (hbarUsd > 0.01 && hbarUsd < 20) ? hbarUsd : 0.17;
+
+    const hbarPerSmackm = whbarAmt / smackmAmt;
+    PRICE = hbarPerSmackm * effectiveHbar;
+
+    _setPrice(PRICE);
+
+    // Pool page reserves
+    const smackmStr = fmt(smackmAmt);
+    const whbarStr  = fmt(whbarAmt);
+    const liqUsd    = smackmAmt * PRICE * 2;
+
+    document.getElementById('pp-smackm').textContent = smackmStr;
+    document.getElementById('pp-smackm').style.color = 'var(--orange)';
+    document.getElementById('pp-whbar').textContent  = whbarStr;
+    document.getElementById('pp-whbar').style.color  = 'var(--blue)';
+
+    const liqStr = '$' + fmt(liqUsd);
+    sk('pp-liq', liqStr, 'blue');
+    sk('ov-liq', liqStr, 'blue');
+
+  } catch(e) {
+    _setPrice(0.00091);
+  }
+}
+
+function _setPrice(p) {
+  PRICE = p;
+  const ps = p < 0.001 ? '$' + p.toFixed(6) : '$' + p.toFixed(4);
+  const mc = '$' + fmt(p * MAX_S);
+  sk('k-p',  ps, 'yellow');
+  sk('pp-price', ps, 'yellow');
+  document.getElementById('hp-price').textContent = ps;
+  document.getElementById('hp-price').style.color = 'var(--yellow)';
+  document.getElementById('hp-sub').textContent = 'SAUCERSWAP LIVE';
+  document.getElementById('k-mc').textContent = 'Mcap ' + mc;
+}
+
+// ── Holders ──────────────────────────────────────────────────────────────────
+async function loadHolders() {
+  try {
+    let allB = [], bu = `${MIRROR}/tokens/${TOKEN}/balances?limit=100`, bp = 0;
+    while (bu && bp < 20) {
+      const d = await api(bu);
+      allB = allB.concat((d.balances||[]).filter(x => x.balance > 0));
+      bu = d.links?.next ? 'https://mainnet-public.mirrornode.hedera.com' + d.links.next : null;
+      bp++;
+      if ((d.balances||[]).length < 100) break;
+    }
+    bals = allB.sort((a, b) => b.balance - a.balance);
+    const n = bals.length;
+    snap.totH = n;
+    sk('k-h',  n, 'blue');
+    sk('hk-t', n, 'blue');
+    document.getElementById('k-h-s').textContent = n + ' active wallets';
+
+    const cc = bals
+      .filter(b => !TW.includes(b.account) && b.account !== POOL)
+      .reduce((s, b) => s + r2a(b.balance), 0);
+    sk('hk-c', (cc / MAX_S * 100).toFixed(1) + '%', 'orange');
+
+    const md = r2a(bals[Math.floor(bals.length/2)]?.balance || 0);
+    const lt = bals.filter(b => r2a(b.balance) > md * 3).length;
+    sk('hk-r', Math.round(lt / bals.length * 100) + '%', 'green');
+
+    const pb = bals.find(b => b.account === POOL);
+    if (pb) sk('pp-pct', (r2a(pb.balance) / MAX_S * 100).toFixed(1) + '%', 'blue');
+
+    const txs = await ftx();
+    const hc = dd(txs);
+    bc('hcOv',   'hcOvL',   hc, 'green');
+    bc('hcFull', 'hcFullL', hc, 'green');
+
+    const tb = document.getElementById('hBody');
+    tb.innerHTML = bals.slice(0, 20).map((b, i) => {
+      const a  = r2a(b.balance);
+      const p  = (a / MAX_S * 100).toFixed(2);
+      const bw = Math.min(100, parseFloat(p) * 4);
+      const rc = i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : '';
+      const it = TW.includes(b.account), kn = WL[b.account];
+      return `<tr>
+        <td class="rk ${rc}">${i+1}</td>
+        <td><div class="wa"><a href="https://hashscan.io/mainnet/account/${b.account}" target="_blank">${b.account}</a>${it ? '<span class="tag y" style="margin-left:4px">TEAM</span>' : ''}</div>${kn ? `<div class="ws">${kn}</div>` : ''}</td>
+        <td class="ab">${fmt(a)}</td>
+        <td><div class="pbw"><div class="pb"><div class="pbf" style="width:${bw}%"></div></div><div class="pct">${p}%</div></div></td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    document.getElementById('hBody').innerHTML = `<tr><td colspan="4" class="empty">Error: ${e.message}</td></tr>`;
+  }
+}
+
+// ── New Holders ───────────────────────────────────────────────────────────────
+async function loadNewH() {
+  const txs = await ftx();
+  const cut = Math.floor(Date.now()/1000) - 7*86400;
+  const r = new Set();
+  txs.forEach(tx => {
+    if (parseFloat(tx.consensus_timestamp) < cut) return;
+    (tx.token_transfers||[]).filter(t => t.token_id === TOKEN && t.amount > 0).forEach(t => r.add(t.account));
+  });
+  snap.newH = r.size;
+  sk('k-new',  r.size, 'green');
+  sk('hk-n',   r.size, 'green');
+  document.getElementById('k-new-d').textContent = r.size + ' wallets';
+
+  const tb = document.getElementById('nhBody');
+  if (!r.size) { tb.innerHTML = '<tr><td colspan="3" class="empty">No new holders in past 7 days</td></tr>'; return; }
+  tb.innerHTML = Array.from(r).slice(0, 15).map((a, i) => {
+    const ba = bals.find(b => b.account === a);
+    const am = ba ? r2a(ba.balance) : 0;
+    return `<tr><td class="rk">${i+1}</td><td><div class="wa"><a href="https://hashscan.io/mainnet/account/${a}" target="_blank">${a}</a><span class="newb">NEW</span></div></td><td class="ab">${fmt(am)}</td></tr>`;
+  }).join('');
+}
+
+// ── Whales ────────────────────────────────────────────────────────────────────
+async function loadWhales() {
+  const txs = await ftx();
+  const nw = Math.floor(Date.now()/1000), d24 = nw - 86400;
+  let ws = [], bb = 0, bs = 0, wc = 0;
+
+  for (const tx of txs) {
+    const tt = (tx.token_transfers||[]).filter(t => t.token_id === TOKEN);
+    const cr = tt.filter(t => t.amount > 0), db = tt.filter(t => t.amount < 0);
+    const m  = gm(tx).toLowerCase(), tp = parseFloat(tx.consensus_timestamp);
+    let ty = {t:'TRANSFER',c:'tr'};
+    if (m.includes('airdrop') || m.includes('drop')) ty = {t:'AIRDROP',c:'ai'};
+    else if (m.includes('game') || m.includes('reward')) ty = {t:'GAME',c:'gm'};
+
+    for (const c of cr) {
+      const a  = r2a(c.amount);
+      const fr = db[0]?.account || '?';
+      const ib = fr === POOL, is = c.account === POOL;
+      if (ib) ty = {t:'BUY',c:'buy'};
+      else if (is) ty = {t:'SELL',c:'sell'};
+      if (a >= WT) {
+        if (tp > d24) { wc++; if (ib && a > bb) bb = a; if (is && a > bs) bs = a; }
+        ws.push({fr, to:c.account, a, tp, m:gm(tx), ty, ib, is});
+      }
+    }
+  }
+
+  snap.wc = wc;
+  sk('k-w',  wc, 'red');
+  sk('wk-c', wc, 'red');
+  sk('wk-b', bb ? fmt(bb) : '0', 'green');
+  sk('wk-s', bs ? fmt(bs) : '0', 'red');
+
+  const net = bb > bs ? 'BUY PRESSURE' : bs > bb ? 'SELL PRESSURE' : 'NEUTRAL';
+  sk('wk-p', net, bb > bs ? 'green' : bs > bb ? 'red' : 'muted');
+  document.getElementById('wk-ps').textContent = bb > bs ? 'more buys 24h' : bs > bb ? 'more sells 24h' : 'balanced';
+
+  if (ws.length && ws[0].a >= 1000000)
+    showAlert(`🐋 MEGA WHALE: ${fmt(ws[0].a)} SMACKM — ${ws[0].ib?'BUY':ws[0].is?'SELL':'TRANSFER'} ${ago(ws[0].tp)}`);
+
+  const rw = (ei, lim) => {
+    const e = document.getElementById(ei); if (!e) return;
+    if (!ws.length) { e.innerHTML = '<div class="empty">No whale moves (&gt;100K SMACKM) in recent data</div>'; return; }
+    e.innerHTML = ws.slice(0, lim).map(w => {
+      const mega = w.a >= 1000000;
+      const ac   = w.ib ? 'gn' : w.is ? 'rd' : w.ty.c === 'gm' ? 'pu' : 'bl';
+      return `<div class="wi">
+        <div class="wbar ${w.ty.c}"></div>
+        <div class="wbody">
+          <div class="wtop"><div class="wamt ${ac}${mega?' mega':''}">${fmt(w.a)}</div><span class="wbadge ${w.ty.c}">${w.ty.t}</span></div>
+          <div class="wsub">${lbl(w.fr)} → ${lbl(w.to)}${w.m ? ` · "${w.m.slice(0,30)}"` : ''}</div>
+        </div>
+        <div class="wtime">${ago(w.tp)}</div>
+      </div>`;
+    }).join('');
+  };
+  rw('ovW', 6);
+  rw('wFull', 40);
+}
+
+// ── Game ──────────────────────────────────────────────────────────────────────
+async function loadGame() {
+  const txs = await ftx();
+  const nw  = Math.floor(Date.now()/1000);
+  const gt  = txs.filter(tx => {
+    const m  = gm(tx).toLowerCase();
+    const tt = (tx.token_transfers||[]).filter(t => t.token_id === TOKEN);
+    const fo = tt.some(t => t.amount < 0 && (t.account === '0.0.8041465' || t.account === '0.0.10240324'));
+    return m.includes('game') || m.includes('reward') || m.includes('earn') || fo;
+  });
+
+  let d = 0, w = 0;
+  const pl = new Set();
+  const gc = {};
+  for (let i = 13; i >= 0; i--) {
+    const x = new Date(Date.now() - i*86400000);
+    gc[x.toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit'})] = 0;
+  }
+  for (const tx of gt) {
+    const tt = (tx.token_transfers||[]).filter(t => t.token_id === TOKEN && t.amount > 0);
+    const tp = parseFloat(tx.consensus_timestamp);
+    let a = 0;
+    tt.forEach(t => { a += r2a(t.amount); pl.add(t.account); });
+    if (tp > nw - 86400)    d += a;
+    if (tp > nw - 7*86400)  w += a;
+    const dk = new Date(tp*1000).toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit'});
+    if (gc[dk] !== undefined) gc[dk] += a;
+  }
+  snap.g24 = d; snap.gp = pl.size;
+  sk('k-g',  fmt(d),  'purple');
+  sk('k-pl', pl.size, 'purple');
+  sk('gk-d', fmt(d),  'purple');
+  sk('gk-w', fmt(w),  'purple');
+  sk('gk-p', pl.size, 'purple');
+  sk('gk-a', fmt(pl.size ? w/pl.size : 0), 'purple');
+  bc('gcOv',   'gcOvL',   gc, 'purple');
+  bc('gcFull', 'gcFullL', gc, 'purple');
+
+  const fe = document.getElementById('gFeed');
+  if (!gt.length) { fe.innerHTML = '<div class="empty">No game reward transactions in recent data</div>'; return; }
+  fe.innerHTML = gt.slice(0, 20).map(tx => {
+    const tt  = (tx.token_transfers||[]).filter(t => t.token_id === TOKEN && t.amount > 0);
+    const tot = tt.reduce((s, t) => s + r2a(t.amount), 0);
+    const m   = gm(tx);
+    return `<div class="wi">
+      <div class="wbar gm"></div>
+      <div class="wbody">
+        <div class="wtop"><div class="wamt pu">${fmt(tot)}</div><span class="wbadge gm">GAME</span></div>
+        <div class="wsub">${tt.length} player${tt.length!==1?'s':''}${m ? ` · "${m.slice(0,30)}"` : ''}</div>
+      </div>
+      <div class="wtime">${ago(tx.consensus_timestamp)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Pool Transfers ────────────────────────────────────────────────────────────
+async function loadPoolTx() {
+  const txs = await ftx();
+  const pt  = txs.filter(tx => (tx.token_transfers||[]).some(t => t.token_id === TOKEN && t.account === POOL));
+  const fe  = document.getElementById('pFeed');
+  if (!fe) return;
+  if (!pt.length) { fe.innerHTML = '<div class="empty">No pool transactions in recent data</div>'; return; }
+  fe.innerHTML = pt.slice(0, 25).map(tx => {
+    const tt = (tx.token_transfers||[]).filter(t => t.token_id === TOKEN);
+    const po = tt.find(t => t.account === POOL && t.amount < 0);
+    const pi = tt.find(t => t.account === POOL && t.amount > 0);
+    const ib = !!po, is = !!pi;
+    const a  = ib ? r2a(Math.abs(po.amount)) : pi ? r2a(pi.amount) : 0;
+    const ot = tt.find(t => t.account !== POOL);
+    const ty = ib ? {t:'BUY',c:'buy'} : is ? {t:'SELL',c:'sell'} : {t:'TRANSFER',c:'tr'};
+    return `<div class="wi">
+      <div class="wbar ${ty.c}"></div>
+      <div class="wbody">
+        <div class="wtop"><div class="wamt ${ib?'gn':'rd'}">${fmt(a)}</div><span class="wbadge ${ty.c}">${ty.t}</span></div>
+        <div class="wsub">${ot ? lbl(ot.account) : '—'}</div>
+      </div>
+      <div class="wtime">${ago(tx.consensus_timestamp)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Treasury Monitoring ───────────────────────────────────────────────────────
+async function loadTreasury() {
+  const wallets = [
+    {a:'0.0.7891970', l:'Treasury'},
+    {a:'0.0.8041465', l:'Ops Wallet'}
+  ];
+  const grid = document.getElementById('treasGrid');
+  grid.innerHTML = '<div class="empty" style="grid-column:1/-1">Loading treasury data...</div>';
+
+  const now = Math.floor(Date.now()/1000);
+
+  const cards = await Promise.all(wallets.map(async w => {
+    try {
+      const acc   = await api(`${MIRROR}/accounts/${w.a}`);
+      const hbar  = (acc.balance?.balance || 0) / 1e8;
+
+      const smackmBal = bals.find(b => b.account === w.a);
+      const smackm    = smackmBal ? r2a(smackmBal.balance) : 0;
+
+      // Outgoing SMACKM in past 7d (from cache)
+      const outTxs = cache.filter(tx => {
+        const tp = parseFloat(tx.consensus_timestamp);
+        if (tp < now - 7*86400) return false;
+        return (tx.token_transfers||[]).some(t => t.token_id === TOKEN && t.account === w.a && t.amount < 0);
+      });
+
+      // Last SMACKM tx from cache
+      const lastTx = cache
+        .filter(tx => (tx.token_transfers||[]).some(t => t.account === w.a))
+        .sort((a, b) => parseFloat(b.consensus_timestamp) - parseFloat(a.consensus_timestamp))[0];
+
+      return {a:w.a, l:w.l, hbar, smackm, outCount:outTxs.length, lastTp:lastTx?.consensus_timestamp||null, ok:true};
+    } catch(e) {
+      return {a:w.a, l:w.l, hbar:0, smackm:0, outCount:0, lastTp:null, ok:false};
+    }
+  }));
+
+  if (cards.some(c => c.outCount > 0)) {
+    snap.va = true;
+    showAlert('⚠️ TREASURY/OPS WALLET MOVEMENT DETECTED — verify immediately!');
+  }
+
+  grid.innerHTML = cards.map(c => {
+    const warn = c.outCount > 0;
+    return `<div class="tcard ${warn ? 'warn' : ''}">
+      <div class="tcard-head">
+        <div class="tcard-name">${c.l}</div>
+        <div class="tstatus ${warn ? 'warn' : 'ok'}">${warn ? '⚠️ MOVEMENT' : '✓ STABLE'}</div>
+      </div>
+      <div class="trow">
+        <div class="tlbl">SMACKM Balance</div>
+        <div class="tval ${warn ? 'warn' : 'neutral'}">${fmt(c.smackm)}</div>
+      </div>
+      <div class="trow">
+        <div class="tlbl">HBAR Balance</div>
+        <div class="tval neutral">${fmt(c.hbar)} ℏ</div>
+      </div>
+      <div class="trow">
+        <div class="tlbl">Outgoing Txs 7d</div>
+        <div class="tval ${c.outCount > 0 ? 'warn' : 'ok'}">${c.outCount} tx</div>
+      </div>
+      <div class="trow">
+        <div class="tlbl">Last Activity</div>
+        <div class="tval neutral" style="font-size:14px">${c.lastTp ? ago(c.lastTp) : '—'}</div>
+      </div>
+      <a class="tlink" href="https://hashscan.io/mainnet/account/${c.a}" target="_blank">${c.a} ↗</a>
+    </div>`;
+  }).join('');
+}
+
+// ── Vesting ───────────────────────────────────────────────────────────────────
+async function loadVesting() {
+  const vw = [
+    {a:'0.0.8215507', l:'Team A',  d:'Team 15% · locked',    lk:true},
+    {a:'0.0.8215492', l:'Team B',  d:'Dev 12% · locked',     lk:true},
+    {a:'0.0.7891970', l:'Treasury',d:'Original mint',        lk:false},
+    {a:'0.0.8041465', l:'Ops',     d:'Operational wallet',   lk:false}
+  ];
+  const txs = await ftx();
+  const vr  = [];
+
+  const cards = vw.map(w => {
+    const b  = bals.find(x => x.account === w.a);
+    const am = b ? r2a(b.balance) : 0;
+    const se = txs.filter(tx => (tx.token_transfers||[]).some(t => t.token_id === TOKEN && t.account === w.a && t.amount < 0));
+    se.forEach(tx => {
+      const tt = (tx.token_transfers||[]).filter(t => t.token_id === TOKEN && t.account === w.a && t.amount < 0);
+      const a  = tt.reduce((s, t) => s + r2a(Math.abs(t.amount)), 0);
+      vr.push({tp:tx.consensus_timestamp, l:w.l, a, m:gm(tx)});
+    });
+    return {...w, am, mv:se.length > 0, tc:se.length};
+  });
+
+  if (cards.some(c => c.mv && (c.a === '0.0.8215507' || c.a === '0.0.8215492'))) {
+    snap.va = true;
+    showAlert('⚠️ TEAM VESTING WALLET IS MOVING — check immediately!');
+  }
+
+  const rv = (ei) => {
+    const e = document.getElementById(ei); if (!e) return;
+    e.innerHTML = cards.map(c => `
+      <div class="vc ${c.mv ? 'warn' : 'ok'}">
+        <div class="vlbl">${c.l} ${c.lk ? '🔒' : ''}</div>
+        <div class="vaddr"><a href="https://hashscan.io/mainnet/account/${c.a}" target="_blank">${c.a}</a></div>
+        <div class="vval">${fmt(c.am)}</div>
+        <div class="vsub">SMACKM · ${c.d}</div>
+        <div class="vstatus">
+          <span>${c.mv ? `⚠️ ${c.tc} TX` : '✓ No movement'}</span>
+          <span style="color:${c.mv?'var(--red)':'var(--green)'}">${c.mv ? 'CHECK' : 'OK'}</span>
+        </div>
+      </div>`).join('');
+  };
+  rv('vGrid');
+  rv('ovV');
+
+  const tb = document.getElementById('vtBody');
+  if (vr.length) {
+    tb.innerHTML = vr.map(r => `
+      <tr>
+        <td style="color:var(--muted);font-size:7px">${fts(r.tp)}</td>
+        <td><span class="tag y">${r.l}</span></td>
+        <td><span class="tag r">OUTGOING</span></td>
+        <td class="ab" style="color:var(--red)">${fmt(r.a)}</td>
+        <td style="font-size:7px;color:var(--muted)">${r.m || '—'}</td>
+      </tr>`).join('');
+  } else {
+    tb.innerHTML = '<tr><td colspan="5" class="empty" style="color:var(--green)">✓ No outgoing movement detected — all OK</td></tr>';
+  }
+}
+
+// ── Notes ─────────────────────────────────────────────────────────────────────
+function saveN() {
+  const t = document.getElementById('notesA').value;
+  localStorage.setItem('smackm_n', t);
+  snap.notes = t;
+  const s = document.getElementById('ns');
+  s.style.opacity = '1';
+  setTimeout(() => { s.style.opacity = '0'; }, 2000);
+}
+function loadN() {
+  const s = localStorage.getItem('smackm_n');
+  if (s) { document.getElementById('notesA').value = s; snap.notes = s; }
+}
+
+// ── Report ────────────────────────────────────────────────────────────────────
+function genReport() {
+  const now = new Date().toLocaleString('en-GB');
+  const r = `╔══════════════════════════════════════════════╗
+  🦟 SMACKM TEAM REPORT — ${now}
+╚══════════════════════════════════════════════╝
+
+1. HOLDER GROWTH
+   New holders 7d:       ${snap.newH} wallets
+   Total holders:        ${snap.totH} active wallets
+
+2. GAME ACTIVITY
+   Game rewards 24h:     ${document.getElementById('gk-d')?.textContent||'—'} SMACKM
+   Game rewards 7d:      ${document.getElementById('gk-w')?.textContent||'—'} SMACKM
+   Players 7d:           ${snap.gp} unique wallets
+   Avg reward/player:    ${document.getElementById('gk-a')?.textContent||'—'} SMACKM
+
+3. WHALE ALERTS
+   Whale moves 24h:      ${snap.wc} txs (>100K SMACKM)
+   Biggest buy 24h:      ${document.getElementById('wk-b')?.textContent||'—'} SMACKM
+   Biggest sell 24h:     ${document.getElementById('wk-s')?.textContent||'—'} SMACKM
+   Market pressure:      ${document.getElementById('wk-p')?.textContent||'—'}
+
+4. LP POOL
+   Price USD (live):     ${document.getElementById('pp-price')?.textContent||'—'}
+   Liquidity:            ${document.getElementById('pp-liq')?.textContent||'—'}
+   SMACKM in pool:       ${document.getElementById('pp-smackm')?.textContent||'—'}
+
+5. PRICE & MARKET CAP
+   Price USD:            ${document.getElementById('k-p')?.textContent||'—'}
+   Market Cap:           ${document.getElementById('k-mc')?.textContent||'—'}
+
+6. VESTING / TREASURY
+   Team A (0.0.8215507): ${snap.va?'⚠️ MOVEMENT!':'✓ No movement'}
+   Team B (0.0.8215492): ${snap.va?'⚠️ MOVEMENT!':'✓ No movement'}
+
+TOKEN: 0.0.8041571 · Supply: ${fmt(MAX_S)} · Decimals: ${DEC}
+Pool:  0.0.8041586 (SaucerSwap SMACKM/WHBAR)
+NFTs:  Multipliers 0.0.8259328 · Elite 0.0.9153866
+
+NOTES:
+${snap.notes||'(no notes)'}
+
+Data source: Hedera Mirror Node (mainnet-public.mirrornode.hedera.com)`;
+  document.getElementById('rContent').textContent = r;
+  document.getElementById('rModal').classList.add('open');
+}
+function closeR() { document.getElementById('rModal').classList.remove('open'); }
+function copyR()  {
+  navigator.clipboard.writeText(document.getElementById('rContent').textContent)
+    .then(() => { const b = document.querySelector('.rmbtn.cp'); b.textContent='✓ COPIED'; setTimeout(()=>{b.textContent='📋 COPY'},2000); });
+}
+function dlR() {
+  const a = document.createElement('a');
+  a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(document.getElementById('rContent').textContent);
+  a.download = `smackm-report-${new Date().toISOString().slice(0,10)}.txt`;
+  a.click();
+}
+
+// ── Bootstrap ─────────────────────────────────────────────────────────────────
+async function loadAll() {
+  cache = [];
+  sl(true, 'LOADING...');
+  await loadTokenInfo();
+  await loadPrice();
+  await loadHolders();
+  await Promise.all([loadWhales(), loadGame(), loadNewH(), loadVesting(), loadPoolTx(), loadTreasury()]);
+  sl(true, 'LIVE · MAINNET');
+  document.getElementById('lastRef').textContent = new Date().toLocaleTimeString('en-GB');
+}
+
+loadAll();
+loadN();
+setInterval(loadAll, 120000);
+</script>
+</body>
+</html>
