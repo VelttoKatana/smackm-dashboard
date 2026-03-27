@@ -205,7 +205,7 @@ textarea:focus{border-color:var(--orange)}
     <div class="kpi" style="--kc:var(--green)">
       <div class="klbl">New Holders 7d</div>
       <div class="kval loading" id="k-new">···</div>
-      <div class="kdelta up" id="k-new-d">wallets</div>
+      <div class="kdelta up" id="k-new-d">first-time wallets</div>
     </div>
     <div class="kpi" style="--kc:var(--blue)">
       <div class="klbl">Total Holders</div>
@@ -265,7 +265,7 @@ textarea:focus{border-color:var(--orange)}
 <!-- ═══════════════════ HOLDERS ═══════════════════ -->
 <div class="page" id="page-holders">
   <div class="krow" style="grid-template-columns:repeat(4,1fr)">
-    <div class="kpi" style="--kc:var(--green)"><div class="klbl">New 7d</div><div class="kval loading" id="hk-n">···</div><div class="ksub">wallets</div></div>
+    <div class="kpi" style="--kc:var(--green)"><div class="klbl">New 7d</div><div class="kval loading" id="hk-n">···</div><div class="ksub">first-time wallets</div></div>
     <div class="kpi" style="--kc:var(--blue)"><div class="klbl">Total</div><div class="kval loading" id="hk-t">···</div><div class="ksub">active holders</div></div>
     <div class="kpi" style="--kc:var(--orange)"><div class="klbl">Community Share</div><div class="kval loading" id="hk-c">···</div><div class="ksub">excl. team &amp; pool</div></div>
     <div class="kpi" style="--kc:var(--green)"><div class="klbl">Retention</div><div class="kval loading" id="hk-r">···</div><div class="ksub">long-term holders</div></div>
@@ -657,22 +657,60 @@ async function loadHolders() {
 }
 
 // ── New Holders ───────────────────────────────────────────────────────────────
+// "New" = wallet had zero SMACKM balance before 7 days ago (first-time holder)
 async function loadNewH() {
   const txs = await ftx();
   const cut = Math.floor(Date.now()/1000) - 7*86400;
-  const r = new Set();
+  const cutTs = `${cut}.000000000`;
+
+  // Step 1: collect unique recipient wallets from last 7 days
+  const candidates = new Set();
   txs.forEach(tx => {
     if (parseFloat(tx.consensus_timestamp) < cut) return;
-    (tx.token_transfers||[]).filter(t => t.token_id === TOKEN && t.amount > 0).forEach(t => r.add(t.account));
+    (tx.token_transfers||[])
+      .filter(t => t.token_id === TOKEN && t.amount > 0)
+      .forEach(t => candidates.add(t.account));
   });
-  snap.newH = r.size;
-  sk('k-new',  r.size, 'green');
-  sk('hk-n',   r.size, 'green');
-  document.getElementById('k-new-d').textContent = r.size + ' wallets';
+
+  if (!candidates.size) {
+    snap.newH = 0;
+    sk('k-new', 0, 'green');
+    sk('hk-n',  0, 'green');
+    document.getElementById('k-new-d').textContent = '0 first-time wallets';
+    document.getElementById('nhBody').innerHTML = '<tr><td colspan="3" class="empty">No new holders in past 7 days</td></tr>';
+    return;
+  }
+
+  // Step 2: for each candidate, check if they had SMACKM before 7 days ago.
+  // GET /tokens/{id}/balances?account.id={wallet}&timestamp=lt:{cut}
+  // balance=0 or no record → genuinely new holder
+  const arr = Array.from(candidates);
+  const newHolders = [];
+  const BATCH = 10;
+
+  for (let i = 0; i < arr.length; i += BATCH) {
+    const batch = arr.slice(i, i + BATCH);
+    const results = await Promise.all(batch.map(async acct => {
+      try {
+        const d = await api(`${MIRROR}/tokens/${TOKEN}/balances?account.id=${acct}&timestamp=lt:${cutTs}`);
+        const prior = d.balances?.[0];
+        return (!prior || prior.balance === 0) ? acct : null;
+      } catch(e) { return null; }
+    }));
+    newHolders.push(...results.filter(Boolean));
+  }
+
+  snap.newH = newHolders.length;
+  sk('k-new', newHolders.length, 'green');
+  sk('hk-n',  newHolders.length, 'green');
+  document.getElementById('k-new-d').textContent = newHolders.length + ' first-time wallets';
 
   const tb = document.getElementById('nhBody');
-  if (!r.size) { tb.innerHTML = '<tr><td colspan="3" class="empty">No new holders in past 7 days</td></tr>'; return; }
-  tb.innerHTML = Array.from(r).slice(0, 15).map((a, i) => {
+  if (!newHolders.length) {
+    tb.innerHTML = '<tr><td colspan="3" class="empty">No first-time SMACKM holders in past 7 days</td></tr>';
+    return;
+  }
+  tb.innerHTML = newHolders.slice(0, 15).map((a, i) => {
     const ba = bals.find(b => b.account === a);
     const am = ba ? r2a(ba.balance) : 0;
     return `<tr><td class="rk">${i+1}</td><td><div class="wa"><a href="https://hashscan.io/mainnet/account/${a}" target="_blank">${a}</a><span class="newb">NEW</span></div></td><td class="ab">${fmt(am)}</td></tr>`;
